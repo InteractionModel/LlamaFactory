@@ -528,6 +528,22 @@ class FinetuningArguments(
         default=1.0,
         metadata={"help": "The alpha parameter for EAFT loss to control the power of adaptive weight."},
     )
+    use_stream_duplex_weighted_loss: bool = field(
+        default=False,
+        metadata={"help": "Whether to use stream duplex weighted CE loss for assistant silence tokens."},
+    )
+    stream_duplex_ast_sil_loss_weight: float = field(
+        default=1.0,
+        metadata={"help": "Loss weight for <|ast_sil|> tokens in stream duplex training."},
+    )
+    stream_duplex_text_loss_weight: float = field(
+        default=1.0,
+        metadata={"help": "Loss weight for non-silence assistant tokens in stream duplex training."},
+    )
+    stream_duplex_token_profile: str = field(
+        default="native",
+        metadata={"help": "Duplex silence token profile (native or qwen35_alias)."},
+    )
     freeze_vision_tower: bool = field(
         default=True,
         metadata={"help": "Whether or not to freeze the vision tower in MLLM training."},
