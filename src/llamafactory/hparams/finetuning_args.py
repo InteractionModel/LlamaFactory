@@ -578,9 +578,89 @@ class FinetuningArguments(
         default=1.0,
         metadata={"help": "Loss weight for non-silence assistant tokens in stream duplex training."},
     )
+    stream_duplex_sil_boundary_window: int = field(
+        default=0,
+        metadata={
+            "help": "Trunks around a speech/silence transition that keep the full silence weight. "
+            "0 disables boundary-aware weighting (flat weight for all silence)."
+        },
+    )
+    stream_duplex_sil_interior_loss_weight: float = field(
+        default=0.1,
+        metadata={
+            "help": "Loss weight for <|ast_sil|> deep inside a long silence run, when "
+            "stream_duplex_sil_boundary_window > 0. Keeps long silences from dominating "
+            "the objective without blunting the transitions."
+        },
+    )
     stream_duplex_token_profile: str = field(
         default="native",
         metadata={"help": "Duplex silence token profile (native or qwen35_alias)."},
+    )
+    use_stream_duplex_2d_rope: bool = field(
+        default=False,
+        metadata={
+            "help": "Whether to use 2D (LaneRoPE-style) position encoding that decouples the "
+            "role (user/assistant) and temporal dimensions for duplex training."
+        },
+    )
+    stream_duplex_role_freq_scale: float = field(
+        default=1.0,
+        metadata={
+            "help": "Init scale K for the learnable role base frequency (omega = K * theta) in 2D RoPE."
+        },
+    )
+    stream_duplex_num_roles: int = field(
+        default=2,
+        metadata={"help": "Number of roles/lanes for 2D RoPE (2 = user/assistant)."},
+    )
+    use_stream_duplex_num_encoder: bool = field(
+        default=False,
+        metadata={
+            "help": "Whether to use the xVal-style continuous number encoder (v2, "
+            "docs/number_encoder_v2.md): additively fuse a learnable-basis + projection-MLP "
+            "encoding of a per-position float value (carried in the batch's num_values "
+            "column) into the <|num|> token's input embedding, instead of literal digit "
+            "tokens. v1 (pure multiplicative scaling of the token's own embedding row) was "
+            "found structurally blind to magnitude under RMSNorm and is no longer used."
+        },
+    )
+    stream_duplex_num_encoder_d_num: int = field(
+        default=128,
+        metadata={
+            "help": "Hidden width of the number encoder's learnable basis (e_base) before "
+            "the projection MLP maps it into the model's embedding dimension."
+        },
+    )
+    stream_duplex_num_encoder_type: str = field(
+        default="v2",
+        metadata={"help": "Number encoder architecture: xval, v2, or affine."},
+    )
+    stream_duplex_num_encoder_value_center: float = field(
+        default=15.2,
+        metadata={"help": "Center value mapped to zero residual by the affine encoder."},
+    )
+    stream_duplex_num_encoder_value_scale: float = field(
+        default=14.8,
+        metadata={"help": "Positive value scale used by the affine encoder."},
+    )
+    stream_duplex_num_encoder_initial_residual_ratio: float = field(
+        default=0.5,
+        metadata={"help": "Initial affine residual norm at one normalized value unit, relative to <|num|>."},
+    )
+    stream_duplex_num_encoder_max_residual_ratio: float = field(
+        default=2.0,
+        metadata={"help": "Upper bound learned by the affine residual-ratio gate."},
+    )
+    stream_duplex_num_encoder_lr_multiplier: float = field(
+        default=1.0,
+        metadata={
+            "help": "Multiplier on the base learning_rate for the number encoder's "
+            "e_base/projection parameters specifically (a separate optimizer param group). "
+            "These are brand-new, randomly-initialized parameters sharing an optimizer with "
+            "a fully pretrained backbone tuned for the base LR; >1.0 lets them catch up "
+            "faster. 1.0 (default) uses the same LR as the rest of the model."
+        },
     )
     freeze_vision_tower: bool = field(
         default=True,
